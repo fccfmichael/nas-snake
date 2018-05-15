@@ -376,7 +376,7 @@
                         $(".modal.loading").modal("show");
                         $("#game-over-modal").modal("hide");
                         $("#game-modal").modal("hide");
-                        serialNumber = nebPay.call(to, value, callFunction, callArgs, {
+                        var serialNumber = nebPay.call(to, value, callFunction, callArgs, {
                             qrcode: {
                                 showQRCode: false
                             },
