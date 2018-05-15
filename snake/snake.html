@@ -1,0 +1,607 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset=utf-8>
+    <link rel="icon shortcut" href=img/logo.png type=image/png>
+    <link rel=apple-touch-icon href=img/logo.png>
+    <link rel=stylesheet href=lib/bootstrap-4.0.0-dist/css/bootstrap.min.css>
+    <link rel=stylesheet href=css/base.css>
+    <link rel=stylesheet href=css/ui-block.css>
+    <meta name=viewport content="width=device-width">
+    <title>snake</title>
+    <style>
+        .check_list {
+            width: 400px;
+            height: 500px;
+            background-color: #f5f5f5;
+            position: absolute;
+            margin-left: 30%;
+            margin-top: -50%;
+            border-radius: 50px;
+            padding: 20px;
+        }
+
+        .check_list .data {
+            width: 100%;
+        }
+
+        .check_list .check {
+            margin-top: 60px;
+        }
+
+        .active1 {
+            display: none;
+        }
+
+        .transaction {
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class=logo-main></div>
+    <div id="game">
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <button type=button id="startBtn" class="btn btn-block">开始游戏</button> 
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    </div>
+
+    <div id="fsb">
+       <table class="table">
+            <caption style="caption-side: top; align-content: center;">封蛇榜TOP10</caption>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>地址</th>
+                    <th>时间</th>
+                    <th>分数</th>
+                </tr>
+            </thead>
+            <tbody id="fbs-tbody"></tbody>
+       </table>
+    </div>
+
+    <div id="fsb-self">
+        <label id="gameRs" style="color: red;align-content: center; display: none">-------当前游戏分数<span id="score"></span>分
+                ，请根据以下操作进行成绩提交
+            </label>
+        <table class="table" style="display: none">
+            <caption style="caption-side: top; align-content: center;">个人历史成绩
+            
+            </caption>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>地址</th>
+                    <th>时间</th>
+                    <th>分数</th>
+                </tr>
+            </thead>
+            <tbody id="fbs-self-tbody"></tbody>
+       </table>
+    </div>
+
+
+    <div id="wallet" style="display: ;">
+    <div class="container select-wallet-file"></div>
+
+    <div id=send class="container send">
+        <div class="form-group row">
+            <div class=col>
+                <label data-i18n=send-nas/from-address>From Address</label>
+                <div class="from icon-address" data-disabled></div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class=col-md-6>
+                <label data-i18n=send-nas/balance>Balance</label>
+                <div class=number-comma data-disabled data-id=balance data-unit=nas></div>
+            </div>
+            <div class=col-md-6>
+                <label for=amount data-i18n=send-nas/amount>Value / Amount to Send</label>
+                <div class=number-comma data-data-i18n=amount data-id=amount data-unit=nas data-validate="required number eqgt0"></div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class=col>
+                <label for=limit>
+                    <span data-i18n=gas-limit>Gas Limit</span>
+                </label>
+                <div class=number-comma data-data-i18n=amount data-id=limit data-validate="required number gt0" data-value=200000></div>
+            </div>
+            <div class=col>
+                <label for=price>
+                    <span data-i18n=gas-price>Gas Price</span>
+                    <i>( 1 NAS = 1EWei = 10
+                        <sup>18</sup> Wei )</i>
+                </label>
+                <div class=number-comma data-data-i18n=amount data-id=price data-unit=wei data-validate="required number gt0" data-value=1000000></div>
+            </div>
+        </div>
+        <div class=form-group>
+            <label for=nonce>Nonce</label>
+            <input class=form-control id=nonce data-validate-order-matters="required number gt0">
+        </div>
+        <button id=submitBtn class="btn btn-block" type=button>提交</button>
+    </div>
+
+    <!-- Modal -->
+    <div class="fade modal" id=modal-confirm tabindex=-1 role=dialog aria-labelledby=exampleModalLabel aria-hidden=true>
+        <div class=modal-dialog role=document>
+            <div class=modal-content>
+                <div class=modal-header>
+                    <h5 class=modal-title id=exampleModalLabel data-i18n=send-nas/transfer_msg>transfer message :</h5>
+                    <button type=button class=close data-dismiss=modal aria-label=Close>
+                        <span aria-hidden=true>&times;</span>
+                    </button>
+                </div>
+                <div class=modal-body>
+                    <div>
+                        <label data-i18n=send-nas/from-address>From Address</label>
+                        <input type=text class=form-control id=for_addr disabled>
+                    </div>
+                    <div>
+                        <label data-i18n=send-nas/to-address>To Address</label>
+                        <input type=text class=form-control id=to_addr disabled>
+                    </div>
+                    <div>
+                        <label for=amount data-i18n=send-nas/amount>Value / Amount to Send</label>
+                        <div class=number-comma data-data-i18n=amount data-id=value data-unit=nas data-disabled></div>
+                    </div>
+                    <!-- <div class=data>
+                        <label>data</label>
+                        <input type=text class=data id=data disabled style="width: 100%;">
+                    </div> -->
+                </div>
+                <div class=modal-footer>
+                    <button class="btn btn-secondary" data-dismiss=modal data-i18n=send-nas/close>Close</button>
+                    <button class="btn btn-primary s" data-dismiss=modal data-i18n=send-nas/check></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="game-modal" class="fade modal" data-backdrop=static>
+        <div class="modal-dialog" style="margin-top: 2px">
+            <div class="modal-content" style="width: 600px;height: 600px;">
+                <!-- <div class="modal-header"></div> -->
+                <div class="modal-body" style="padding: 0">
+                    <canvas id="gameCanvas" width="600" height="600" style="background-color: black;
+                    justify-content: center;
+                    align-items: center;">对不起，您的浏览器不支持canvas</canvas>
+                </div>
+                <!--<div class="modal-footer"></div>-->
+            </div>
+        </div>
+    </div>
+    <div id="game-over-modal" class="fade modal" data-backdrop=static>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">游戏结束</h5>
+                </div>
+                <div class="modal-body" style="text-align: center;">
+                    分数： <span id="score"></span>分
+                </div>
+                <div class="modal-footer" style="align-items: center;">
+                    <button class="btn btn-secondary" id="restart">重新开始</button>
+                    <button class="btn btn-primary s" id="commit">提交分数</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fade loading modal" data-backdrop=static>
+        <div class=modal-dialog>
+            <div class=modal-content>
+                <div class=modal-body>
+                    <div class=progress>
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role=progressbar style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="fade success modal" data-depends=static>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    提交成功！
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src=lib/jquery-3.3.1.min.js></script>
+    <script src=lib/bootstrap-4.0.0-dist/js/bootstrap.bundle.min.js data-depends=jquery.slim></script>
+    <script src=lib/bootbox.min.js data-depends="bootstrap jquery.slim"></script>
+    <script src=lib/jquery.qrcode.min.js data-depends=jquery></script>
+    <script src=lib/blockies.min.js></script>
+    <script src=lib/nebulas.js></script>
+    <script src=js/1-localSave.js></script>
+    <script src=js/home.v1.js></script>
+    <script src=js/i18n.js data-depends=jquery.slim></script>
+    <script src=js/ui-block.js data-depends="bootbox blockies jquery.slim i18n.js nebulas.js"></script>
+    <script>
+        var snake = [41, 40],  //snake队列表示蛇身，初始节点存在但不显示
+        direction = 1,   //1表示向右，-1表示向左，30表示向下，-30表示向上
+        food = 43,    //食物的位置
+        n,      //与下次移动的位置有关
+        box = document.getElementById('gameCanvas').getContext('2d'),
+        score = -1;
+        function draw(seat, color) {
+            box.fillStyle = color;
+            box.fillRect(seat % 30 *20 + 1, ~~(seat / 30) * 20 + 1, 18, 18);
+                 //用color填充一个矩形，以前两个参数为x，y坐标，后两个参数为宽和高。
+        }
+        document.onkeydown = function(evt) { 
+                 //当键盘上下左右键摁下的时候改变direction
+            direction = snake[1] - snake[0] == (n = [-1, -30, 1, 30][(evt || event).keyCode - 37] || direction) ? direction : n;
+        };
+        function start() {
+            snake.unshift(n = snake[0] + direction); //向数组的开头添加一个或更多元素，并返回新的长度
+                 //此时的n为下次蛇头出现的位置，n进入队列
+            if(snake.indexOf(n, 1) > 0 || n < 0 || n > 899 || direction == 1 && n % 30 == 0 || direction == -1 && n % 30 == 29) {
+                 //if语句判断贪吃蛇是否撞到自己或者墙壁，碰到时返回，结束程序
+                 $("[id^='score']").each(function(){
+                    $(this).html(score);
+                 });
+                return $("#game-over-modal").modal("show");//alert("GAME OVER!");
+            }
+            draw(n, "lime");  //画出蛇头下次出现的位置
+            if(n == food) {   //如果吃到食物时，产生一个蛇身以外的随机的点，不会去掉蛇尾
+                score += 1;
+                while (snake.indexOf(food = ~~(Math.random() * 900)) > 0);
+                draw(food, "yellow");
+            } 
+            else {    //没有吃到食物时正常移动，蛇尾出队列
+                draw(snake.pop(),"black");
+            }
+            setTimeout(arguments.callee, 150);  
+            //每隔0.15秒执行函数一次，可以调节蛇的速度
+        }
+        //$("#game-over-modal").modal({backdrop: false, show :false});
+        $("#startBtn").bind("click", function(){
+            $("#game-modal").modal("show");
+        });
+        $("#restart").bind("click", function () {
+            $("#game-over-modal").modal("hide");
+            cleanCanvas();
+            start();
+        });
+        $("#game-modal").on("shown.bs.modal", function (e) {
+            start();
+        });
+    
+        function cleanCanvas()
+        {
+            score = -1;
+            snake = [41, 40]; 
+            direction = 1;   
+            food = 43;
+            var canvas = document.getElementById("gameCanvas");
+            box.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        $("#commit").bind('click', function () {
+            $("#gameRs").show();
+            $("#game-over-modal").modal("hide");
+            $("#game-modal").modal("hide");
+        });
+    </script>
+    <script>
+        $("#submitBtn").on("click", call);
+        "use strict";
+        
+        var nebulas = require("nebulas"),
+            Transaction = nebulas.Transaction,
+            Utils = nebulas.Utils,
+            Unit = nebulas.Unit,
+            neb = new nebulas.Neb(),
+            validateAll = uiBlock.validate(),
+            gLastGenerateInfo = {},
+            gAccount, gTx;
+        var contractAddress = "n21w9bB9PUabrvkRG9kzGhxbS6aijoa4Zvs";
+        neb.setRequest(new nebulas.HttpRequest(localSave.getItem("apiPrefix") || "https://testnet.nebulas.io/"));
+     
+
+        uiBlock.insert({
+            footer: ".footer",
+            header: ".header",
+            iconAddress: ".icon-address",
+            logoMain: ".logo-main",
+            numberComma: ".number-comma",
+            selectWalletFile: [".select-wallet-file", onUnlockFile]
+        });
+
+        function onUnlockFile(swf, fileJson, account, password) {  //TODO: 对外函数不要用简称
+            var address;
+            try {
+                account.fromKey(fileJson, password);
+                address = account.getAddressString();
+                gAccount = account;
+
+                $(".icon-address.from input").val(address).trigger("input"); // gen icon from addr, needs trigger 'input' event if via set o.value
+                $("#unlock").hide();
+                $("#send").show();
+
+                neb.api.getAccountState(address)
+                    .then(function (resp) {
+                        var nas = Unit.fromBasic(resp.balance, "nas").toNumber();
+
+                        $("#balance").val(nas).trigger("input"); // add comma & unit from value, needs trigger 'input' event if via set o.value
+                        $("#nonce").val(parseInt(resp.nonce || 0) + 1);
+                    })
+                    .catch(function (e) {
+                        // this catches e thrown by nebulas.js!neb
+
+                        bootbox.dialog({
+                            backdrop: true,
+                            onEscape: true,
+                            message: i18n.apiErrorToText(e.message),
+                            size: "large",
+                            title: "Error"
+                        });
+                    });
+            } catch (e) {
+                // this catches e thrown by nebulas.js!account
+
+                bootbox.dialog({
+                    backdrop: true,
+                    onEscape: true,
+                    message: localSave.getItem("lang") == "en" ? e : "keystore 文件错误, 或者密码错误",
+                    size: "large",
+                    title: "Error"
+                });
+            }
+        }
+
+        function call()
+        {
+            $(".modal.loading").modal("show");
+            previousInnerCall(function (params) {
+                var gTx = new nebulas.Transaction(parseInt(localSave.getItem("chainId")),
+                                gAccount, 
+                                params.to,
+                                params.value,
+                                params.nonce,
+                                params.gasPrice,
+                                params.gasLimit,
+                                params.contract   );
+                gTx.signTransaction();
+                neb.api.sendRawTransaction(gTx.toProtoString()).then(function (resp) {
+                    $(".modal.loading").modal("hide");
+                    console.log(JSON.stringify(resp));
+                    $(".modal.success").modal("show");
+                    setTimeout(function(){
+                        $(".modal.success").modal("hide");
+                        FSB();
+                        cleanCanvas();
+                        $("#gameRs").hide();
+                    }, 2000);
+                }).catch(function (err) {
+                    console.log(JSON.stringify(err));
+                });  
+            });
+            
+        }
+        function FSBContent(list)
+        {
+            // sort
+            var fsbArr = JSON.parse(list.result);
+            fsbArr = fsbArr.sort(function (a, b) {
+                if(a.score === b.score) return 0;
+                return (a.score < b.score) ? 1 : -1;
+            });
+            $('#fbs-tbody').html("");
+            var str = "";
+            for(var i = 0; i < fsbArr.length && i < 10; i++)
+            {
+                str = str + '<tr>'
+                        +'<th scope="row">' + (fsbArr[i].index + 1) + '</th>'
+                        +'<td>' + fsbArr[i].userName  + '</td>'
+                        +'<td>' + fsbArr[i].time  + '</td>'
+                        +'<td>' + fsbArr[i].score + '</td>'
+                        +'</tr>';
+            }
+            $('#fbs-tbody').html(str);
+        }
+        function FSB()
+        {
+            innerCall(function(params) {
+                neb.api.call({
+                    from: params.from,
+                    to: params.to,
+                    value: params.value,
+                    nonce: params.nonce,
+                    gasPrice: params.gasPrice,
+                    gasLimit: params.gasLimit,
+                    contract: params.contract
+                }).then(function (resp) {
+                    FSBContent(resp);  
+                }).catch(function (err) {
+                    console.log(JSON.stringify(err));
+                });
+            });
+        }
+
+        function innerCall(callback, func) {
+            let params = {};
+
+            //设置一个默认地址
+            params.from  = localSave.getItem("initAddress") ?  ocalSave.getItem("initAddress") : "n1MEP8VAK8HjYdpCkj5xKmnzEeoV8A61rnZ";
+
+            // 合约地址
+            let toAddr = contractAddress;
+
+            params.to = toAddr;
+
+
+            // prepare gasLimit
+            let gasLimit = Utils.toBigNumber("0");
+            try {
+                gasLimit = Utils.toBigNumber("200000");
+            } catch (err) {
+                console.log(err);
+            }
+            if (gasLimit.cmp(Utils.toBigNumber(0)) <= 0) {
+                $("#limit").addClass("err");
+                setTimeout(function () {
+                    $("#limit").removeClass("err");
+                }, 5000);
+                return;
+            }
+            params.gasLimit = gasLimit.toNumber();
+
+            // prepare gasPrice
+            let gasPrice = Utils.toBigNumber(0);
+            try {
+                gasPrice = Utils.toBigNumber("1000000");
+            } catch (err) {
+                console.log(err);
+            }
+            if (gasPrice.cmp(Utils.toBigNumber(0)) <= 0) {
+                $("#price").addClass("err");
+                setTimeout(function () {
+                    $("#price").removeClass("err");
+                }, 5000);
+                return;
+            }
+            params.gasPrice = gasPrice.toNumber();
+
+            // prepare value
+            let value = Utils.toBigNumber(0);
+            try {
+                value = nebulas.Unit.toBasic(Utils.toBigNumber(0), "nas");
+            } catch (err) {
+                console.log(err);
+            }
+            if (value.cmp(Utils.toBigNumber(0)) < 0) {
+                // TODO 添加提示value输入不对
+                console.log("invalid value");
+                return;
+            }
+            params.value = value;
+            params.contract = {
+                "function": func || "findFSB",
+                "args": ""
+            };
+            // prepare nonce
+            neb.api.getAccountState(params.from).then(function (resp) {
+                //获取nonce的值+1
+                params.nonce = parseInt(resp.nonce) + 1;
+                //回调方法
+                callback(params);
+            }).catch(function (err) {
+                bootbox.dialog({
+                    backdrop: true,
+                    onEscape: true,
+                    message: i18n.apiErrorToText(err.message),
+                    size: "large",
+                    title: "Error"
+                });
+                clearInterval(window.mainInter);
+
+            });
+        }
+
+        function previousInnerCall(callback) {
+            let params = {};
+
+            if (!gAccount) {
+                // TODO 提示钱包信息不正确
+                return;
+            }
+            params.from = gAccount.getAddressString();
+
+            // prepare to
+            let toAddr = contractAddress;
+
+            params.to = toAddr;
+
+            // prepare gasLimit
+            let gasLimit = Utils.toBigNumber(0);
+            try {
+                gasLimit = Utils.toBigNumber($("#limit").val());
+            } catch (err) {
+                console.log(err);
+            }
+            if (gasLimit.cmp(Utils.toBigNumber(0)) <= 0) {
+                $("#limit").addClass("err");
+                setTimeout(function () {
+                    $("#limit").removeClass("err");
+                }, 5000);
+                return;
+            }
+            params.gasLimit = gasLimit.toNumber();
+
+            // prepare gasPrice
+            let gasPrice = Utils.toBigNumber(0);
+            try {
+                gasPrice = Utils.toBigNumber($("#price").val());
+            } catch (err) {
+                console.log(err);
+            }
+            if (gasPrice.cmp(Utils.toBigNumber(0)) <= 0) {
+                $("#price").addClass("err");
+                setTimeout(function () {
+                    $("#price").removeClass("err");
+                }, 5000);
+                return;
+            }
+            params.gasPrice = gasPrice.toNumber();
+
+            // prepare value
+            let value = Utils.toBigNumber(0);
+            try {
+                value = nebulas.Unit.toBasic(Utils.toBigNumber($("#amount").val()), "nas");
+            } catch (err) {
+                console.log(err);
+            }
+            if (value.cmp(Utils.toBigNumber(0)) < 0) {
+                // TODO 添加提示value输入不对
+                console.log("invalid value");
+                return;
+            }
+            params.value = value;
+
+
+            // set score to args
+            var arr = [];
+            
+            arr.push(score);
+            arr.push((new Date()).getTime());
+            params.contract = {
+                "function": "save",
+                "args": JSON.stringify(arr)
+            };
+
+            // prepare nonce
+            neb.api.getAccountState(params.from).then(function (resp) {
+                var balance = nebulas.Unit.fromBasic(resp.balance, "nas");
+                params.nonce = parseInt(resp.nonce) + 1;
+                $("#amount").val(balance + " NAS");
+                callback(params);
+            }).catch(function (err) {
+                console.log("prepare nonce error: " + err);
+                bootbox.dialog({
+                    backdrop: true,
+                    onEscape: true,
+                    message: i18n.apiErrorToText(err.message),
+                    size: "large",
+                    title: "Error"
+                });
+            });
+        }
+        !function(){
+            FSB();
+        }();
+        
+    </script>
+</body>
+</html>
