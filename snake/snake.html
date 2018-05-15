@@ -71,9 +71,6 @@
     </div>
 
     <div id="fsb-self" class="container">
-        <label id="gameRs" style="color: red;align-content: center; display: none">-------当前游戏分数<span id="score"></span>分
-                ，请根据以下操作进行成绩提交
-            </label>
         <table class="table" style="display: none">
             <caption style="caption-side: top; align-content: center;">个人历史成绩
             
@@ -91,84 +88,8 @@
     </div>
 
 
-    <div id="wallet" style="display: ;">
-    <div class="container select-wallet-file"></div>
-
-    <div id=send class="container send">
-        <div class="form-group row">
-            <div class=col>
-                <label data-i18n=send-nas/from-address>From Address</label>
-                <div class="from icon-address" data-disabled></div>
-            </div>
-        </div>
-        <div class="form-group row">
-            <div class=col-md-6>
-                <label data-i18n=send-nas/balance>Balance</label>
-                <div class=number-comma data-disabled data-id=balance data-unit=nas></div>
-            </div>
-            <div class=col-md-6>
-                <label for=amount data-i18n=send-nas/amount>Value / Amount to Send</label>
-                <div class=number-comma data-data-i18n=amount data-id=amount data-unit=nas data-validate="required number eqgt0"></div>
-            </div>
-        </div>
-        <div class="form-group row">
-            <div class=col>
-                <label for=limit>
-                    <span data-i18n=gas-limit>Gas Limit</span>
-                </label>
-                <div class=number-comma data-data-i18n=amount data-id=limit data-validate="required number gt0" data-value=200000></div>
-            </div>
-            <div class=col>
-                <label for=price>
-                    <span data-i18n=gas-price>Gas Price</span>
-                    <i>( 1 NAS = 1EWei = 10
-                        <sup>18</sup> Wei )</i>
-                </label>
-                <div class=number-comma data-data-i18n=amount data-id=price data-unit=wei data-validate="required number gt0" data-value=1000000></div>
-            </div>
-        </div>
-        <div class=form-group>
-            <label for=nonce>Nonce</label>
-            <input class=form-control id=nonce data-validate-order-matters="required number gt0">
-        </div>
-        <button id=submitBtn class="btn btn-block" type=button>提交</button>
-    </div>
-
     <!-- Modal -->
-    <div class="fade modal" id=modal-confirm tabindex=-1 role=dialog aria-labelledby=exampleModalLabel aria-hidden=true>
-        <div class=modal-dialog role=document>
-            <div class=modal-content>
-                <div class=modal-header>
-                    <h5 class=modal-title id=exampleModalLabel data-i18n=send-nas/transfer_msg>transfer message :</h5>
-                    <button type=button class=close data-dismiss=modal aria-label=Close>
-                        <span aria-hidden=true>&times;</span>
-                    </button>
-                </div>
-                <div class=modal-body>
-                    <div>
-                        <label data-i18n=send-nas/from-address>From Address</label>
-                        <input type=text class=form-control id=for_addr disabled>
-                    </div>
-                    <div>
-                        <label data-i18n=send-nas/to-address>To Address</label>
-                        <input type=text class=form-control id=to_addr disabled>
-                    </div>
-                    <div>
-                        <label for=amount data-i18n=send-nas/amount>Value / Amount to Send</label>
-                        <div class=number-comma data-data-i18n=amount data-id=value data-unit=nas data-disabled></div>
-                    </div>
-                    <!-- <div class=data>
-                        <label>data</label>
-                        <input type=text class=data id=data disabled style="width: 100%;">
-                    </div> -->
-                </div>
-                <div class=modal-footer>
-                    <button class="btn btn-secondary" data-dismiss=modal data-i18n=send-nas/close>Close</button>
-                    <button class="btn btn-primary s" data-dismiss=modal data-i18n=send-nas/check></button>
-                </div>
-            </div>
-        </div>
-    </div>
+    
     <div id="game-modal" class="fade modal" data-backdrop=static>
         <div class="modal-dialog" style="margin-top: 2px">
             <div class="modal-content" style="width: 600px;height: 600px;">
@@ -226,6 +147,7 @@
     <script src=lib/jquery.qrcode.min.js data-depends=jquery></script>
     <script src=lib/blockies.min.js></script>
     <script src=lib/nebulas.js></script>
+    <script src=lib/nebPay.js></script>
     <script src=js/1-localSave.js></script>
     <script src=js/home.v1.js></script>
     <script src=js/i18n.js data-depends=jquery.slim></script>
@@ -290,108 +212,25 @@
             var canvas = document.getElementById("gameCanvas");
             box.clearRect(0, 0, canvas.width, canvas.height);
         }
-        $("#commit").bind('click', function () {
-            $("#gameRs").show();
-            $("#game-over-modal").modal("hide");
-            $("#game-modal").modal("hide");
-        });
+        
     </script>
     <script>
-        $("#submitBtn").on("click", call);
         "use strict";
-        
         var nebulas = require("nebulas"),
-            Transaction = nebulas.Transaction,
             Utils = nebulas.Utils,
             Unit = nebulas.Unit,
-            neb = new nebulas.Neb(),
-            validateAll = uiBlock.validate(),
-            gLastGenerateInfo = {},
-            gAccount, gTx;
-        var contractAddress = "n21w9bB9PUabrvkRG9kzGhxbS6aijoa4Zvs";
+            neb = new nebulas.Neb();
+        var contractAddress = "n21w9bB9PUabrvkRG9kzGhxbS6aijoa4Zvs";     
+        var NebPay = require("nebpay");
+        var nebPay = new NebPay();
         neb.setRequest(new nebulas.HttpRequest(localSave.getItem("apiPrefix") || "https://testnet.nebulas.io/"));
-     
-
         uiBlock.insert({
             footer: ".footer",
             header: ".header",
             iconAddress: ".icon-address",
-            logoMain: ".logo-main",
-            numberComma: ".number-comma",
-            selectWalletFile: [".select-wallet-file", onUnlockFile]
+            logoMain: ".logo-main"
         });
 
-        function onUnlockFile(swf, fileJson, account, password) {  //TODO: 对外函数不要用简称
-            var address;
-            try {
-                account.fromKey(fileJson, password);
-                address = account.getAddressString();
-                gAccount = account;
-
-                $(".icon-address.from input").val(address).trigger("input"); // gen icon from addr, needs trigger 'input' event if via set o.value
-                $("#unlock").hide();
-                $("#send").show();
-
-                neb.api.getAccountState(address)
-                    .then(function (resp) {
-                        var nas = Unit.fromBasic(resp.balance, "nas").toNumber();
-
-                        $("#balance").val(nas).trigger("input"); // add comma & unit from value, needs trigger 'input' event if via set o.value
-                        $("#nonce").val(parseInt(resp.nonce || 0) + 1);
-                    })
-                    .catch(function (e) {
-                        // this catches e thrown by nebulas.js!neb
-
-                        bootbox.dialog({
-                            backdrop: true,
-                            onEscape: true,
-                            message: i18n.apiErrorToText(e.message),
-                            size: "large",
-                            title: "Error"
-                        });
-                    });
-            } catch (e) {
-                // this catches e thrown by nebulas.js!account
-
-                bootbox.dialog({
-                    backdrop: true,
-                    onEscape: true,
-                    message: localSave.getItem("lang") == "en" ? e : "keystore 文件错误, 或者密码错误",
-                    size: "large",
-                    title: "Error"
-                });
-            }
-        }
-
-        function call()
-        {
-            $(".modal.loading").modal("show");
-            previousInnerCall(function (params) {
-                var gTx = new nebulas.Transaction(parseInt(localSave.getItem("chainId")),
-                                gAccount, 
-                                params.to,
-                                params.value,
-                                params.nonce,
-                                params.gasPrice,
-                                params.gasLimit,
-                                params.contract   );
-                gTx.signTransaction();
-                neb.api.sendRawTransaction(gTx.toProtoString()).then(function (resp) {
-                    $(".modal.loading").modal("hide");
-                    console.log(JSON.stringify(resp));
-                    $(".modal.success").modal("show");
-                    setTimeout(function(){
-                        $(".modal.success").modal("hide");
-                        FSB();
-                        cleanCanvas();
-                        $("#gameRs").hide();
-                    }, 2000);
-                }).catch(function (err) {
-                    console.log(JSON.stringify(err));
-                });  
-            });
-            
-        }
         function FSBContent(list)
         {
             // sort
@@ -432,7 +271,8 @@
             });
         }
 
-        function innerCall(callback, func) {
+        function innerCall(callback, func) 
+        {
             let params = {};
 
             //设置一个默认地址
@@ -508,101 +348,70 @@
                     title: "Error"
                 });
                 clearInterval(window.mainInter);
-
-            });
-        }
-
-        function previousInnerCall(callback) {
-            let params = {};
-
-            if (!gAccount) {
-                // TODO 提示钱包信息不正确
-                return;
-            }
-            params.from = gAccount.getAddressString();
-
-            // prepare to
-            let toAddr = contractAddress;
-
-            params.to = toAddr;
-
-            // prepare gasLimit
-            let gasLimit = Utils.toBigNumber(0);
-            try {
-                gasLimit = Utils.toBigNumber($("#limit").val());
-            } catch (err) {
-                console.log(err);
-            }
-            if (gasLimit.cmp(Utils.toBigNumber(0)) <= 0) {
-                $("#limit").addClass("err");
-                setTimeout(function () {
-                    $("#limit").removeClass("err");
-                }, 5000);
-                return;
-            }
-            params.gasLimit = gasLimit.toNumber();
-
-            // prepare gasPrice
-            let gasPrice = Utils.toBigNumber(0);
-            try {
-                gasPrice = Utils.toBigNumber($("#price").val());
-            } catch (err) {
-                console.log(err);
-            }
-            if (gasPrice.cmp(Utils.toBigNumber(0)) <= 0) {
-                $("#price").addClass("err");
-                setTimeout(function () {
-                    $("#price").removeClass("err");
-                }, 5000);
-                return;
-            }
-            params.gasPrice = gasPrice.toNumber();
-
-            // prepare value
-            let value = Utils.toBigNumber(0);
-            try {
-                value = nebulas.Unit.toBasic(Utils.toBigNumber($("#amount").val()), "nas");
-            } catch (err) {
-                console.log(err);
-            }
-            if (value.cmp(Utils.toBigNumber(0)) < 0) {
-                // TODO 添加提示value输入不对
-                console.log("invalid value");
-                return;
-            }
-            params.value = value;
-
-
-            // set score to args
-            var arr = [];
-            
-            arr.push(score);
-            arr.push((new Date()).getTime());
-            params.contract = {
-                "function": "save",
-                "args": JSON.stringify(arr)
-            };
-
-            // prepare nonce
-            neb.api.getAccountState(params.from).then(function (resp) {
-                var balance = nebulas.Unit.fromBasic(resp.balance, "nas");
-                params.nonce = parseInt(resp.nonce) + 1;
-                $("#amount").val(balance + " NAS");
-                callback(params);
-            }).catch(function (err) {
-                console.log("prepare nonce error: " + err);
-                bootbox.dialog({
-                    backdrop: true,
-                    onEscape: true,
-                    message: i18n.apiErrorToText(err.message),
-                    size: "large",
-                    title: "Error"
-                });
             });
         }
         !function(){
             FSB();
         }();
+        (function ($) {
+            var wallet = function () {
+                if(score >= 0)
+                {
+                    if(typeof(webExtensionWallet) === "undefined")
+                    {
+                        alert ("请先安装星云谷歌拓展钱包.")
+                    }
+                    else
+                    {
+                        var from = "n1MEP8VAK8HjYdpCkj5xKmnzEeoV8A61rnZ";
+                        var to = contractAddress;
+                        var value = '0';
+                        // set score to args
+                        var arr = [];
+                        arr.push(score);
+                        arr.push((new Date()).getTime());
+                       
+                        var callFunction = 'save';
+                        var callArgs = JSON.stringify(arr);
+                        $(".modal.loading").modal("show");
+                        $("#game-over-modal").modal("hide");
+                        $("#game-modal").modal("hide");
+                        serialNumber = nebPay.call(to, value, callFunction, callArgs, {
+                            qrcode: {
+                                showQRCode: false
+                            },
+                            goods: {
+                                name: "",
+                                desc: ""
+                            },
+                            listener: transactionCallBack  //set listener for extension transaction result
+                        });
+                        setTimeout(() => {
+                            FSB();
+                        }, 1000);
+                    }
+                }
+            };
+
+            function transactionCallBack(resp)
+            {
+                $(".modal.loading").modal("hide");
+                console.log(JSON.stringify(resp));
+                $(".modal.success").modal("show");
+                setTimeout(function(){
+                    $(".modal.success").modal("hide");
+                }, 2000);
+            }
+            function commit()
+            {
+                wallet();
+            }
+            
+            $(function() {
+                wallet();
+                $('#commit').bind('click', commit);
+            });
+        })(jQuery);
         
     </script>
 </body>
